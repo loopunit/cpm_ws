@@ -1,0 +1,5 @@
+if(NOT TARGET imgui)
+	CPM_WSAddPackage(ocornut imgui)
+	include(${CPM_WS_INSTALL_CACHE}/ocornut/imgui/cpm_ws_package.cmake)
+	add_library(ocornut::imgui ALIAS imgui)
+endif()

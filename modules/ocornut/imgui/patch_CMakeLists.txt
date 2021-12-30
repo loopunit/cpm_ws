@@ -1,0 +1,48 @@
+cmake_minimum_required( VERSION 3.14 )
+
+project(imgui VERSION 1.7.8)
+
+file(GLOB headers 
+	"${imgui_SOURCE_DIR}/imconfig.h"
+	"${imgui_SOURCE_DIR}/imgui.h"
+	"${imgui_SOURCE_DIR}/imgui_internal.h"
+	"${imgui_SOURCE_DIR}/imstb_rectpack.h"
+	"${imgui_SOURCE_DIR}/imstb_textedit.h"
+	"${imgui_SOURCE_DIR}/imstb_truetype.h")
+
+file(GLOB sources 
+	"${imgui_SOURCE_DIR}/imconfig.cpp"
+	"${imgui_SOURCE_DIR}/imgui.cpp"
+	"${imgui_SOURCE_DIR}/imgui_demo.cpp"
+	"${imgui_SOURCE_DIR}/imgui_draw.cpp"
+	"${imgui_SOURCE_DIR}/imgui_tables.cpp"
+	"${imgui_SOURCE_DIR}/imgui_widgets.cpp")
+
+add_library(imgui STATIC ${sources} ${headers})
+
+target_include_directories(imgui 
+	PUBLIC 
+		$<BUILD_INTERFACE:${imgui_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:include>)
+
+set_target_properties(imgui PROPERTIES CXX_STANDARD 20)
+
+target_compile_definitions(imgui 
+	PUBLIC 
+		HELLO_WORLD=TRUE
+		GOODBYE_WORLD=FALSE)
+
+if (MSVC)
+  set_target_properties(imgui
+      PROPERTIES
+      COMPILE_PDB_NAME imgui)
+endif()
+
+#packageProject(
+#	NAME imgui
+#	VERSION ${PROJECT_VERSION}
+#	BINARY_DIR ${PROJECT_BINARY_DIR}
+#	INCLUDE_FILES ${headers}
+#	INCLUDE_DESTINATION include
+#	DISABLE_VERSION_SUFFIX YES
+#	INSTALL_PDB imgui)
