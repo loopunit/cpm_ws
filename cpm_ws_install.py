@@ -21,6 +21,7 @@ componentName = None
 binaryPath = None
 includePaths = None
 defines = None
+link_libraries = None
 #
 argIdx = 0
 #
@@ -64,6 +65,13 @@ while argIdx < len(sys.argv):
             else:
                 defines = sys.argv[valIdx].split(',')
                 argIdx = valIdx
+    elif sys.argv[argIdx].casefold() == "-link_libraries":
+        for valIdx in range(argIdx + 1, len(sys.argv)):
+            if sys.argv[valIdx].startswith("-"):
+                break;
+            else:
+                link_libraries = sys.argv[valIdx].split(',')
+                argIdx = valIdx
     #
     elif sys.argv[argIdx].casefold() == "-config":
         for valIdx in range(argIdx + 1, len(sys.argv)):
@@ -92,32 +100,32 @@ while argIdx < len(sys.argv):
     argIdx+=1
 #
 if len(buildType) > 0:
-    includeInstallDir = "{0}/include".format(installPrefix)
+    #includeInstallDir = "{0}/include".format(installPrefix)
     libDir = "{0}/lib/".format(installPrefix)
     #
-    if includePaths is not None:
-        if os.path.exists(includeInstallDir):
-            try:
-                shutil.rmtree(includeInstallDir, ignore_errors=True)
-            except OSError as exc:
-                print("ERROR: shutil.rmtree({0}), {1}".format(includeInstallDir, exc))
-        #
-        for i in includePaths:
-            try:
-                shutil.copytree(i, includeInstallDir, dirs_exist_ok=True, copy_function=copy_header)
-            except OSError as exc:
-                print("ERROR: shutil.copytree({0}, {1}), {2}".format(i, includeInstallDir, exc))
+    #if includePaths is not None:
+    #    #if os.path.exists(includeInstallDir):
+    #    #    try:
+    #    #        shutil.rmtree(includeInstallDir, ignore_errors=True)
+    #    #    except OSError as exc:
+    #    #        print("ERROR: shutil.rmtree({0}), {1}".format(includeInstallDir, exc))
+    #    ##
+    #    for i in includePaths:
+    #        try:
+    #            shutil.copytree(i, includeInstallDir, dirs_exist_ok=True, copy_function=copy_header)
+    #        except OSError as exc:
+    #            print("ERROR: shutil.copytree({0}, {1}), {2}".format(i, includeInstallDir, exc))
     #
     if buildType.casefold() == "staticlib":
         targetFileName = os.path.basename(targetFile)
-        installedTargetFile = "{0}{1}".format(libDir, targetFileName)
+        #installedTargetFile = "{0}{1}".format(libDir, targetFileName)
         #
-        try:
-            shutil.copy(targetFile, installedTargetFile)
-        except OSError as exc:
-            print("ERROR: shutil.copy({0}, {1}), {2}".format(targetFile, installedTargetFile, exc))
+        #try:
+        #    shutil.copy(targetFile, installedTargetFile)
+        #except OSError as exc:
+        #    print("ERROR: shutil.copy({0}, {1}), {2}".format(targetFile, installedTargetFile, exc))
         #
-        with open("{0}/cpm_ws_package.cmake".format(installPrefix), "w+") as package_script:
+        with open("{0}/cpm_ws_{1}.cmake".format(installPrefix, componentName), "w+") as package_script:
             print("add_library({0} STATIC IMPORTED)".format(componentName), file=package_script)
             if defines is not None:
                 print("target_compile_definitions({0} INTERFACE".format(componentName), file=package_script)
@@ -127,17 +135,26 @@ if len(buildType) > 0:
             #
             if includePaths is not None:
                 print("target_include_directories({0} INTERFACE".format(componentName), file=package_script)
-                print(" ", includeInstallDir, file=package_script)
+                #print(" ", includeInstallDir, file=package_script)
+                for i in includePaths:
+                        print(" {0}".format(i), file=package_script)
+                print(" )", file=package_script)
+            #
+            if link_libraries is not None:
+                print("target_link_libraries({0} INTERFACE".format(componentName), file=package_script)
+                for l in link_libraries:
+                    print("     {0} ".format(d), file=package_script)
                 print(" )", file=package_script)
             #
             print("set_property(TARGET {0} APPEND PROPERTY IMPORTED_CONFIGURATIONS {1})".format(componentName, buildConfig.upper()), file=package_script)
             print("set_target_properties({0} PROPERTIES".format(componentName), file=package_script)
             print(" IMPORTED_LINK_INTERFACE_LANGUAGES_{0} \"CXX\"".format(buildConfig.upper()), file=package_script)
-            print(" IMPORTED_LOCATION_{0} \"{1}\")".format(buildConfig.upper(), installedTargetFile), file=package_script)
+            print(" IMPORTED_LOCATION_{0} \"{1}\")".format(buildConfig.upper(), targetFile), file=package_script)
+            #print(" IMPORTED_LOCATION_{0} \"{1}\")".format(buildConfig.upper(), installedTargetFile), file=package_script)
             package_script.close()
     #
     elif buildType.casefold() == "headerlib":
-        with open("{0}/cpm_ws_package.cmake".format(installPrefix), "w+") as package_script:
+        with open("{0}/cpm_ws_{1}.cmake".format(installPrefix, componentName), "w+") as package_script:
             print("add_library({0} INTERFACE)".format(componentName), file=package_script)
             if defines is not None:
                 print("target_compile_definitions({0} INTERFACE".format(componentName), file=package_script)
@@ -147,7 +164,15 @@ if len(buildType) > 0:
             #
             if includePaths is not None:
                 print("target_include_directories({0} INTERFACE".format(componentName), file=package_script)
-                print(" ", includeInstallDir, file=package_script)
+                #print(" ", includeInstallDir, file=package_script)
+                for i in includePaths:
+                        print(" {0}".format(i), file=package_script)
+                print(" )", file=package_script)
+            #
+            if link_libraries is not None:
+                print("target_link_libraries({0} INTERFACE".format(componentName), file=package_script)
+                for l in link_libraries:
+                    print("     {0} ".format(d), file=package_script)
                 print(" )", file=package_script)
             #
             package_script.close()

@@ -33,4 +33,4 @@ configure_file(patch_imconfig.cpp ${ocornut_imgui_SOURCE_DIR}/imconfig.cpp COPYO
 set(BUILD_TESTING Off)
 add_subdirectory(${ocornut_imgui_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}/cpm_ws)
 
-CPM_WSInstallTarget("imgui" "staticlib")
+CPM_WSInstallTargets(TARGETS imgui)

@@ -19,4 +19,4 @@ CPMAddPackage(
 	GITHUB_REPOSITORY boostorg/leaf
 	GIT_TAG 0d51eb85ece592c154a8a1515488b50f284eeae5)
 
-CPM_WSInstallTarget("leaf" "headerlib")
+CPM_WSInstallTargets(TARGETS leaf)
