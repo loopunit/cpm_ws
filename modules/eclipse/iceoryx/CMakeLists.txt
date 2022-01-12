@@ -20,6 +20,10 @@ CPMAddPackage(
 	GIT_TAG 6c923090e90e2bd354b1ec84f54d7a55bb9e11c7
 	DOWNLOAD_ONLY)
 
+configure_file(${CMAKE_SOURCE_DIR}/duration.inl.patch
+	${eclipse_iceoryx_SOURCE_DIR}/iceoryx_hoofs/include/iceoryx_hoofs/internal/units/duration.inl
+	COPYONLY)
+
 ########
 
 set(ICEORYX_VERSION_PATCH "0")
