@@ -14,6 +14,10 @@ endif()
 include(${CPM_DOWNLOAD_LOCATION} REQUIRED)
 include(${CPM_WS_SOURCE_DIR}/cmake/cpm_ws.cmake REQUIRED)
 
+if(DEFINED CPM_LOCAL_PACKAGE_DIR)
+	set(CPM_boostorg_leaf_SOURCE ${CPM_LOCAL_PACKAGE_DIR} CACHE PATH)
+endif()
+
 CPMAddPackage(
 	NAME boostorg_leaf
 	GITHUB_REPOSITORY boostorg/leaf

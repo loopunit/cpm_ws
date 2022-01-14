@@ -16,6 +16,10 @@ include(${CPM_WS_SOURCE_DIR}/cmake/cpm_ws.cmake REQUIRED)
 
 message(STATUS "Expect a \'Cache for <XXX> is dirty\' warning")
 
+if(DEFINED CPM_LOCAL_PACKAGE_DIR)
+	set(CPM_ocornut_imgui_SOURCE ${CPM_LOCAL_PACKAGE_DIR} CACHE PATH)
+endif()
+
 CPMAddPackage(
 	NAME ocornut_imgui
 	GITHUB_REPOSITORY ocornut/imgui

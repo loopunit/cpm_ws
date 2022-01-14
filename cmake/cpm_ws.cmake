@@ -36,6 +36,11 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 	
 	file(MAKE_DIRECTORY ${ARG_MODULE_WORKING_DIR})
 
+	message(STATUS "Checking for local: ${CPM_WS_DEV_ROOT}/${ARG_ORG_NAME}/${ARG_MODULE_NAME}")
+	if(EXISTS ${CPM_WS_DEV_ROOT}/${ARG_ORG_NAME}/${ARG_MODULE_NAME})
+		set(CPM_LOCAL_PACKAGE_DIR_ARG -DCPM_LOCAL_PACKAGE_DIR:PATH=${CPM_WS_DEV_ROOT}/${ARG_ORG_NAME}/${ARG_MODULE_NAME})
+	endif()
+	
 	message(STATUS
 		"${CMAKE_COMMAND}\n"
 		"	-DCMAKE_INSTALL_PREFIX:PATH=${ARG_MODULE_INSTALL_DIR}\n"
@@ -46,6 +51,7 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 		"	-DCPM_WS_SOURCE_CACHE:PATH=${CPM_WS_SOURCE_CACHE}\n"
 		"	-DCPM_WS_BUILD_CACHE:PATH=${CPM_WS_BUILD_CACHE}\n"
 		"	-DCPM_WS_DEV_ROOT:PATH=${CPM_WS_DEV_ROOT}\n"
+		"	${CPM_LOCAL_PACKAGE_DIR_ARG}\n"
 		"	-G Ninja\n"
 		"	-S ${ARG_MODULE_DIR}\n"
 		"	-B ${ARG_MODULE_WORKING_DIR}\n"
@@ -61,6 +67,7 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 			-DCPM_WS_SOURCE_CACHE:PATH=${CPM_WS_SOURCE_CACHE}
 			-DCPM_WS_BUILD_CACHE:PATH=${CPM_WS_BUILD_CACHE}
 			-DCPM_WS_DEV_ROOT:PATH=${CPM_WS_DEV_ROOT}
+			${CPM_LOCAL_PACKAGE_DIR_ARG}
 			-G Ninja
 			-S ${ARG_MODULE_DIR} 
 			-B ${ARG_MODULE_WORKING_DIR}
@@ -86,9 +93,14 @@ function(CPM_WSRefPackage ARG_ORG_NAME ARG_MODULE_NAME)
 endfunction()
 
 function(CPM_WSInstallTargets)
+	set(flagArgs)
+	
 	set(oneValueArgs)
-	set(multiValueArgs TARGETS)
-	cmake_parse_arguments(arg "" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+	
+	set(multiValueArgs 
+		TARGETS)
+	
+	cmake_parse_arguments(arg "${flagArgs}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
 	
 	#file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/include)
 	#file(MAKE_DIRECTORY ${CMAKE_INSTALL_PREFIX}/lib)

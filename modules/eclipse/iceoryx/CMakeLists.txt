@@ -14,22 +14,22 @@ endif()
 include(${CPM_DOWNLOAD_LOCATION} REQUIRED)
 include(${CPM_WS_SOURCE_DIR}/cmake/cpm_ws.cmake REQUIRED)
 
+if(DEFINED CPM_LOCAL_PACKAGE_DIR)
+	set(CPM_eclipse_iceoryx_SOURCE ${CPM_LOCAL_PACKAGE_DIR} CACHE PATH)
+	unset(CPM_LOCAL_PACKAGE_DIR)
+endif()
+
 CPMAddPackage(
 	NAME eclipse_iceoryx
 	GITHUB_REPOSITORY eclipse-iceoryx/iceoryx
 	GIT_TAG 6c923090e90e2bd354b1ec84f54d7a55bb9e11c7
 	DOWNLOAD_ONLY)
 
-configure_file(${CMAKE_SOURCE_DIR}/duration.inl.patch
-	${eclipse_iceoryx_SOURCE_DIR}/iceoryx_hoofs/include/iceoryx_hoofs/internal/units/duration.inl
-	COPYONLY)
-
 ########
-
-set(ICEORYX_VERSION_PATCH "0")
 
 set(iceoryx_posh_SOURCE_DIR ${eclipse_iceoryx_SOURCE_DIR}/iceoryx_posh)
 set(iceoryx_hoofs_SOURCE_DIR ${eclipse_iceoryx_SOURCE_DIR}/iceoryx_hoofs)
+
 include("${iceoryx_hoofs_SOURCE_DIR}/cmake/IceoryxPlatform.cmake")
 
 ########
