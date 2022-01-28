@@ -32,7 +32,22 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 	set(ARG_MODULE_INSTALL_DIR	"${CPM_WS_INSTALL_CACHE}/${ARG_MODULE_SUBDIR}")
 	set(ARG_MODULE_DIR			"${CPM_WS_SOURCE_DIR}/modules/${ARG_MODULE_SUBDIR}")
 	
-	message(STATUS "CPM_WS: ${ARG_MODULE_FULLNAME} via ${ARG_MODULE_DIR}\n Building in ${ARG_MODULE_WORKING_DIR}, installing to ${ARG_MODULE_INSTALL_DIR}")
+	set(flagArgs USE_VSTUDIO)
+	
+	set(oneValueArgs)
+	
+	set(multiValueArgs 
+		TARGETS)
+	
+	cmake_parse_arguments(arg "${flagArgs}" "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+
+	if(${arg_USE_VSTUDIO})
+		set(ARG_GENERATOR "Visual Studio 17 2022")
+	else()
+		set(ARG_GENERATOR "Ninja")
+	endif()
+	
+	message(STATUS "CPM_WS: ${ARG_MODULE_FULLNAME} via ${ARG_MODULE_DIR}\n Building (${ARG_GENERATOR}) in ${ARG_MODULE_WORKING_DIR}, installing to ${ARG_MODULE_INSTALL_DIR}")
 	
 	file(MAKE_DIRECTORY ${ARG_MODULE_WORKING_DIR})
 
@@ -51,8 +66,9 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 		"	-DCPM_WS_SOURCE_CACHE:PATH=${CPM_WS_SOURCE_CACHE}\n"
 		"	-DCPM_WS_BUILD_CACHE:PATH=${CPM_WS_BUILD_CACHE}\n"
 		"	-DCPM_WS_DEV_ROOT:PATH=${CPM_WS_DEV_ROOT}\n"
+		"	-DCPM_EXPLICIT_CMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}\n"
 		"	${CPM_LOCAL_PACKAGE_DIR_ARG}\n"
-		"	-G Ninja\n"
+		"	-G ${ARG_GENERATOR}\n"
 		"	-S ${ARG_MODULE_DIR}\n"
 		"	-B ${ARG_MODULE_WORKING_DIR}\n"
 		"WORKING_DIRECTORY ${ARG_MODULE_WORKING_DIR}")
@@ -67,8 +83,9 @@ function(CPM_WSAddPackage ARG_ORG_NAME ARG_MODULE_NAME)
 			-DCPM_WS_SOURCE_CACHE:PATH=${CPM_WS_SOURCE_CACHE}
 			-DCPM_WS_BUILD_CACHE:PATH=${CPM_WS_BUILD_CACHE}
 			-DCPM_WS_DEV_ROOT:PATH=${CPM_WS_DEV_ROOT}
+			-DCPM_EXPLICIT_CMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
 			${CPM_LOCAL_PACKAGE_DIR_ARG}
-			-G Ninja
+			-G ${ARG_GENERATOR}
 			-S ${ARG_MODULE_DIR} 
 			-B ${ARG_MODULE_WORKING_DIR}
 		WORKING_DIRECTORY ${ARG_MODULE_WORKING_DIR})
@@ -152,8 +169,29 @@ function(CPM_WSInstallTargets)
 		#		APPEND _link_libraries_args
 		#			"$<JOIN:$<TARGET_PROPERTY:${targetName},INTERFACE_LINK_LIBRARIES>,,>")
 		#endif()
-		
-		if(DEFINED cpm_ws_target_BINARY_DIR AND NOT ${targetType} STREQUAL "headerlib" )
+		if(${targetType} STREQUAL "dynamiclib" )
+			if (DEFINED _link_libraries_args)
+				if(DEFINED _definition_args AND DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -includes ${_include_args} -defines ${_definition_args} -link_libraries ${_link_libraries_args})
+				elseif(NOT DEFINED _definition_args AND DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -includes ${_include_args} -link_libraries ${_link_libraries_args})
+				elseif(DEFINED _definition_args AND NOT DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -defines ${_definition_args} -link_libraries ${_link_libraries_args})
+				elseif(NOT DEFINED _definition_args AND NOT DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -link_libraries ${_link_libraries_args})
+				endif()
+			else()
+				if(DEFINED _definition_args AND DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -includes ${_include_args} -defines ${_definition_args})
+				elseif(NOT DEFINED _definition_args AND DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -includes ${_include_args})
+				elseif(DEFINED _definition_args AND NOT DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -defines ${_definition_args})
+				elseif(NOT DEFINED _definition_args AND NOT DEFINED _include_args)
+					set(optional_args -target_file $<TARGET_FILE:${targetName}> -target_linker_file $<TARGET_LINKER_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR})
+				endif()
+			endif()
+		elseif(DEFINED cpm_ws_target_BINARY_DIR AND NOT ${targetType} STREQUAL "headerlib" )
 			if (DEFINED _link_libraries_args)
 				if(DEFINED _definition_args AND DEFINED _include_args)
 					set(optional_args -target_file $<TARGET_FILE:${targetName}> -binary ${cpm_ws_target_BINARY_DIR} -includes ${_include_args} -defines ${_definition_args} -link_libraries ${_link_libraries_args})
@@ -199,7 +237,16 @@ function(CPM_WSInstallTargets)
 			endif()
 		endif()
 
+		#message(STATUS "**** CMAKE_BUILD_TYPE == ${CMAKE_BUILD_TYPE}")
+		#message(STATUS "**** CPM_EXPLICIT_CMAKE_BUILD_TYPE == ${CPM_EXPLICIT_CMAKE_BUILD_TYPE}")
 		#message(STATUS "****${optional_args}")
+		
+		# msbuild workaround
+		if (NOT DEFINED CPM_EXPLICIT_CMAKE_BUILD_TYPE)
+			# Not using multi-configs, but multi-config generators don't define CMAKE_BUILD_TYPE
+			# Since multi-configs are duplicated per-type, forcing this is fine.
+			set(CPM_EXPLICIT_CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE})
+		endif()
 		
 		file(APPEND ${CMAKE_INSTALL_PREFIX}/cpm_ws_package.cmake "# ${targetName}\n")
 		file(APPEND ${CMAKE_INSTALL_PREFIX}/cpm_ws_package.cmake "include(\"\$\{CMAKE_CURRENT_LIST_DIR\}/cpm_ws_${targetName}.cmake\")\n")
@@ -211,7 +258,7 @@ function(CPM_WSInstallTargets)
 			BYPRODUCTS
 				${CMAKE_INSTALL_PREFIX}/cpm_ws_${targetName}.cmake
 			COMMAND 
-				python ${CPM_WS_SOURCE_DIR}/cpm_ws_install.py -install_prefix ${CMAKE_INSTALL_PREFIX} -config ${CMAKE_BUILD_TYPE} -type ${targetType} -name ${targetName} ${optional_args}
+				python ${CPM_WS_SOURCE_DIR}/cpm_ws_install.py -install_prefix ${CMAKE_INSTALL_PREFIX} -config ${CPM_EXPLICIT_CMAKE_BUILD_TYPE} -type ${targetType} -name ${targetName} ${optional_args}
 			COMMAND_EXPAND_LISTS)
 	
 		list(APPEND cpm_ws_install_list cpm_ws_install_${targetName})

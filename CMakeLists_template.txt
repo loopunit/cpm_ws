@@ -10,7 +10,19 @@ set(CPM_SOURCE_CACHE "${CMAKE_CURRENT_LIST_DIR_ABS}/.cpm_src" CACHE PATH "")
 set(CPM_WS_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR_ABS}/cpm_ws" CACHE PATH "")
 set(CPM_WS_INSTALL_CACHE "${CMAKE_CURRENT_LIST_DIR_ABS}/.cpm_install/${CPM_WS_BUILD_PREFIX}" CACHE PATH "")
 set(CPM_WS_SOURCE_CACHE "${CMAKE_CURRENT_LIST_DIR_ABS}/.cpm_src" CACHE PATH "")
-set(CPM_WS_BUILD_CACHE "${CMAKE_CURRENT_BINARY_DIR_ABS}/.cpm_out" CACHE PATH "")
+
+#todo: where can we put the build cache that works properly?
+# With this flavor:
+# set(CPM_WS_BUILD_CACHE "${CMAKE_CURRENT_BINARY_DIR_ABS}/.cpm_out" CACHE PATH "")
+# "configure" cache fails and corrupts the project state, "delete cache and reconfigure" works, but deletes this path
+# However, an external path will work, but configure still fails, intellisense glitches out and the project eventually 
+# corrupts itself at some point after hitting "delete cache and reconfigure" enough times.
+set(CPM_WS_BUILD_CACHE "${CMAKE_CURRENT_LIST_DIR_ABS}/.cpm_out" CACHE PATH "")
+
 set(CPM_WS_DEV_ROOT "${CMAKE_CURRENT_LIST_DIR_ABS}" CACHE PATH "")
 
-add_subdirectory(your/projects/here)
+# The following adds a module in developer mode via add_subdirectory:
+#set(CPM_dependencyorg_dependency_SOURCE "${CMAKE_CURRENT_LIST_DIR_ABS}/dependencyorg/dependency" CACHE PATH "")
+#add_subdirectory("${CPM_WS_SOURCE_DIR}/modules/dependencyorg/dependency")
+
+#add_subdirectory(your/projects/here)

@@ -15,6 +15,7 @@ def copy_header(src, dst, *, follow_symlinks=True):
     return dst
 #   
 targetFile = None
+targetLinkerFile = None
 installPrefix = None
 buildConfig = None
 componentName = None
@@ -25,6 +26,9 @@ link_libraries = None
 #
 argIdx = 0
 #
+
+#print("*******{0}".format(sys.argv))
+
 while argIdx < len(sys.argv):
     if sys.argv[argIdx].casefold() == "-target_file":
         for valIdx in range(argIdx + 1, len(sys.argv)):
@@ -32,6 +36,14 @@ while argIdx < len(sys.argv):
                 break;
             else:
                 targetFile = sys.argv[valIdx]
+                argIdx = valIdx
+    #
+    elif sys.argv[argIdx].casefold() == "-target_linker_file":
+        for valIdx in range(argIdx + 1, len(sys.argv)):
+            if sys.argv[valIdx].startswith("-"):
+                break;
+            else:
+                targetLinkerFile = sys.argv[valIdx]
                 argIdx = valIdx
     #
     elif sys.argv[argIdx].casefold() == "-install_prefix":
@@ -178,15 +190,35 @@ if len(buildType) > 0:
             package_script.close()
     #
     elif buildType.casefold() == "dynamiclib":
-        print("targetFile:      ", targetFile)    
-        if binaryPath is not None:
-            print(binaryPath)
-        #
-        if includePaths is not None:
-            print("includePaths:    ", includePaths)
-        #
-        if defines is not None:
-            print("defines:         ", defines)
+        with open("{0}/cpm_ws_{1}.cmake".format(installPrefix, componentName), "w+") as package_script:
+            print("add_library({0} SHARED IMPORTED)".format(componentName), file=package_script)
+            if defines is not None:
+                print("target_compile_definitions({0} INTERFACE".format(componentName), file=package_script)
+                for d in defines:
+                    print("     {0} ".format(d), file=package_script)
+                print(" )", file=package_script)
+            #
+            if includePaths is not None:
+                print("target_include_directories({0} INTERFACE".format(componentName), file=package_script)
+                #print(" ", includeInstallDir, file=package_script)
+                for i in includePaths:
+                        print(" {0}".format(i), file=package_script)
+                print(" )", file=package_script)
+            #
+            if link_libraries is not None:
+                print("target_link_libraries({0} INTERFACE".format(componentName), file=package_script)
+                for l in link_libraries:
+                    print("     {0} ".format(d), file=package_script)
+                print(" )", file=package_script)
+            #
+            print("set_property(TARGET {0} APPEND PROPERTY IMPORTED_CONFIGURATIONS {1})".format(componentName, buildConfig.upper()), file=package_script)
+            print("set_target_properties({0} PROPERTIES".format(componentName), file=package_script)
+            print(" IMPORTED_LINK_INTERFACE_LANGUAGES_{0} \"CXX\"".format(buildConfig.upper()), file=package_script)
+            print(" IMPORTED_LOCATION_{0} \"{1}\"".format(buildConfig.upper(), targetFile), file=package_script)
+            print(" IMPORTED_IMPLIB_{0} \"{1}\")".format(buildConfig.upper(), targetLinkerFile), file=package_script)
+            #set_property(TARGET bar PROPERTY  c:/path/to/bar.lib)
+            #print(" IMPORTED_LOCATION_{0} \"{1}\")".format(buildConfig.upper(), installedTargetFile), file=package_script)
+            package_script.close()
     #
     elif buildType.casefold() == "pipelinetool":
         print("targetFile:      ", targetFile)    
